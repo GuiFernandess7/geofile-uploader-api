@@ -17,7 +17,7 @@ func RegisterRoutes(router *echo.Echo, log *logrus.Logger) {
 		log.Info("[HEALTH-CHECK] - Request received on root endpoint - OK.")
 		return c.JSON(http.StatusOK, models.GenericResponse{
 			Status:  http.StatusOK,
-			Message: "Service is up and running",
+			Message: "Service is up and running.",
 		})
 	})
 
@@ -28,7 +28,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		log.Info("[BEGIN] - Request received on root endpoint - OK.")
 
-		// 1. Receive step
+		// 1. Receive file
 		file, err := c.FormFile("file")
 		if err != nil {
 			log.Errorf("[ERROR] - File NOT received: %v", err)
@@ -41,7 +41,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
 
 		log.Infof("[UPLOAD] - Received file: %s", file.Filename)
 
-		// 2. Process step
+		// 2. Process file
 		fileManager := fileController.FController{File: file}
 		err = fileManager.ProcessFile(".kml", "tmp")
 		if err != nil {
@@ -54,7 +54,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
 		}
 		log.Infof("[PROCESS] - File %s processed successfully", file.Filename)
 
-		// 3. Read step
+		// 3. Read file
 		currentFilePath := fmt.Sprintf("tmp/%s", file.Filename)
 		currentFile, err := utils.OpenLocalFile(currentFilePath)
 		if err != nil {
@@ -68,7 +68,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
 		}
 		log.Infof("[READ] - File %s readed successfully", file.Filename)
 
-		// 5. Delete Step
+		// 5. Delete file
 		defer func() {
 			if currentFile != nil {
 				currentFile.Close()
@@ -82,7 +82,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
 			}
 		}()
 
-		// 4. Upload step
+		// 4. Upload file
 		log.Infof("[INFO] - Sending File [%s] to GCP Bucket... ", file.Filename)
 		err = fileManager.UploadFileToBucket(currentFile, currentFilePath, file.Filename)
 		if err != nil {
