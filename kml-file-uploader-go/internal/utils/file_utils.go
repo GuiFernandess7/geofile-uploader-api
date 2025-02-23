@@ -50,7 +50,6 @@ func OpenLocalFile(filePath string) (*os.File, error){
 }
 
 func DeleteFile(filePath string) error {
-	fmt.Printf("Tentando deletar arquivo: %s\n", filePath)
 	err := os.Remove(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to delete file %s: %v", filePath, err)
