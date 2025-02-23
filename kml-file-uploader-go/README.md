@@ -1,6 +1,6 @@
 ### KML File uploader | KML File Uploader
 
-![python-golang--1-](https://github.com/user-attachments/assets/5af6a6b3-b4f5-429d-8caa-853c2985aede)
+![python-golang--1- (1)](https://github.com/user-attachments/assets/1177f3cc-2523-4795-b176-a920cb625a79)
 
 #### **Responsabilites** | **Responsabilidades**
 
