@@ -43,3 +43,17 @@ func StoreFile(dst *os.File, src multipart.File) error {
 func OpenFile(file *multipart.FileHeader) (multipart.File, error) {
 	return file.Open()
 }
+
+func OpenLocalFile(filePath string) (*os.File, error){
+	file, err := os.Open(filePath)
+	return file, err
+}
+
+func DeleteFile(filePath string) error {
+	fmt.Printf("Tentando deletar arquivo: %s\n", filePath)
+	err := os.Remove(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to delete file %s: %v", filePath, err)
+	}
+	return nil
+}
