@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"kmlSender/internal/utils"
 	"mime/multipart"
+	"os"
 )
 
 type FController struct {
@@ -38,5 +39,18 @@ func (fc *FController) ProcessFile(validExt, tmpFolder string) error {
 		return fmt.Errorf("failed to save the file: %w", err)
 	}
 
+	return nil
+}
+
+func (fc *FController) UploadFileToBucket(fileObj *os.File, filePath string, destFileName string) error {
+	gcp := &utils.GCPClient{}
+
+	if err := gcp.SetBucket(); err != nil {
+		return fmt.Errorf("Bucket error: %w", err)
+	}
+
+	if err := gcp.Upload(fileObj, filePath, destFileName); err != nil {
+		return fmt.Errorf("Upload error: %w", err)
+	}
 	return nil
 }
