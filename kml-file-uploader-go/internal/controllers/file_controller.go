@@ -11,7 +11,7 @@ type FController struct {
 	File *multipart.FileHeader
 }
 
-func (fc *FController) ProcessFile(validExt, tmpFolder string) error {
+func (fc *FController) DownloadFile(validExt, tmpFolder string) error {
 	err := utils.ValidateFileExtension(fc.File.Filename, validExt)
 	if err != nil {
 		return fmt.Errorf("invalid file extension: %w", err)
