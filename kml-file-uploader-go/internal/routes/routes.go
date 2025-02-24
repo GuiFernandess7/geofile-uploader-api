@@ -5,23 +5,27 @@ import (
 	"net/http"
 
 	fileController "kmlSender/internal/controllers"
+	customMiddleware "kmlSender/internal/middleware"
 	"kmlSender/internal/models"
 	"kmlSender/internal/utils"
 
 	"github.com/labstack/echo/v4"
+	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 )
 
 func RegisterRoutes(router *echo.Echo, log *logrus.Logger) {
-	router.GET("/health-check", func(c echo.Context) error {
-		log.Info("[HEALTH-CHECK] - Request received on root endpoint - OK.")
-		return c.JSON(http.StatusOK, models.GenericResponse{
-			Status:  http.StatusOK,
-			Message: "Service is up and running.",
-		})
-	})
+    router.Use(echoMiddleware.Recover())
 
-	router.POST("/upload-kml-file", uploadKMLFile(log))
+    router.GET("/health-check", func(c echo.Context) error {
+        log.Info("[HEALTH-CHECK] - Request received on root endpoint - OK.")
+        return c.JSON(http.StatusOK, models.GenericResponse{
+            Status:  http.StatusOK,
+            Message: "Service is up and running.",
+        })
+    })
+
+    router.POST("/upload-kml-file", uploadKMLFile(log), customMiddleware.FirebaseAuthMiddleware)
 }
 
 func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
@@ -43,7 +47,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
 
 		// 2. Process file
 		fileManager := fileController.FController{File: file}
-		err = fileManager.ProcessFile(".kml", "tmp")
+		err = fileManager.DownloadFile(".kml", "tmp")
 		if err != nil {
 			log.Errorf("[ERROR] - File %s not processed: %v", file.Filename, err)
 			return c.JSON(http.StatusInternalServerError, models.FileResponse{
@@ -52,7 +56,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
 				Filename: nil,
 			})
 		}
-		log.Infof("[PROCESS] - File %s processed successfully", file.Filename)
+		log.Infof("[DOWNLOAD] - File %s downloaded successfully", file.Filename)
 
 		// 3. Read file
 		currentFilePath := fmt.Sprintf("tmp/%s", file.Filename)
