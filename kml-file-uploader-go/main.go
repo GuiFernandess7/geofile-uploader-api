@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"kmlSender/internal/middleware"
 	"kmlSender/internal/routes"
 
 	"github.com/joho/godotenv"
@@ -33,22 +34,26 @@ func setUpEnv(local bool) error {
 
 func main() {
 	var log = logrus.New()
-	local := true
-	err := setUpEnv(local)
-
 	log.SetFormatter(&logrus.TextFormatter{
 		TimestampFormat: "2006-01-02 15:04:05",
 		FullTimestamp:   true,
 	})
 
+	local := true
+	err := setUpEnv(local)
 	if err != nil {
 		log.Errorf("Error setting up env variables: %v", err)
 		return
 	}
 
+	err = middleware.InitFirebase(".creds/firebase.json", log)
+	if err != nil {
+		log.Errorf("Firebase error: %v", err)
+		return
+	}
+
 	router := echo.New()
 	routes.RegisterRoutes(router, log)
-
 	if err := router.Start(":8000"); err != nil {
 		log.Fatalf("Error starting server: %v", err)
 	}
