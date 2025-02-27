@@ -1,4 +1,4 @@
-### Microservices Application for Visualization, Processing, and Uploading Geospatial Files
+## Microservices Application for Visualization, Processing, and Uploading Geospatial Files 🗺️
 
 ![0_LBq0zdAbrHuseS4g](https://github.com/user-attachments/assets/b8586096-cb78-4976-bb54-4b9cd4a77375)
 
