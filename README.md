@@ -1,7 +1,3 @@
-## Geofile File uploader
-
-![0_LBq0zdAbrHuseS4g](https://github.com/user-attachments/assets/75784917-1c1c-4f14-bf82-3d2bf52d9850)
-
 ### Microservices Application for Visualization, Processing, and Uploading Geospatial Files
 
 This repository is part of a larger application that follows a microservices architecture. Currently, it includes an API developed using the Echo framework in Go (Golang), which is the first service implemented. The API is responsible for reading, processing, and uploading geospatial files in KML format to a bucket on Google Cloud Platform (GCP). Once a file is uploaded, the system triggers a message via GCP Pub/Sub to notify other services about the availability of the new geospatial file.
