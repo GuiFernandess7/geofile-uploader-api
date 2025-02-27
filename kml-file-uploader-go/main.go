@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"kmlSender/internal/middleware"
 	"kmlSender/internal/routes"
+	"kmlSender/internal/services"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -46,7 +46,7 @@ func main() {
 		return
 	}
 
-	err = middleware.InitFirebase(".creds/firebase.json", log)
+	err = services.InitFirebase(".creds/firebase.json", log)
 	if err != nil {
 		log.Errorf("Firebase error: %v", err)
 		return

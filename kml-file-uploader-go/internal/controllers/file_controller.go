@@ -2,9 +2,12 @@ package fileController
 
 import (
 	"fmt"
-	"kmlSender/internal/utils"
+	"kmlSender/internal/helpers"
+	"kmlSender/internal/services"
 	"mime/multipart"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type FController struct {
@@ -12,45 +15,54 @@ type FController struct {
 }
 
 func (fc *FController) DownloadFile(validExt, tmpFolder string) error {
-	err := utils.ValidateFileExtension(fc.File.Filename, validExt)
+	err := helpers.ValidateFileExtension(fc.File.Filename, validExt)
 	if err != nil {
-		return fmt.Errorf("invalid file extension: %w", err)
+		return fmt.Errorf("invalid file extension - %w", err)
 	}
 
-	src, err := utils.OpenFile(fc.File)
+	src, err := helpers.OpenFile(fc.File)
 	if err != nil {
-		return fmt.Errorf("failed to open file: %w", err)
+		return fmt.Errorf("failed to open file - %w", err)
 	}
 	defer src.Close()
 
-	err = utils.CreateDirectory(tmpFolder)
+	err = helpers.CreateDirectory(tmpFolder)
 	if err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
+		return fmt.Errorf("failed to create directory - %w", err)
 	}
 
-	dst, err := utils.SetDestinationPath(tmpFolder, fc.File.Filename)
+	dst, err := helpers.SetDestinationPath(tmpFolder, fc.File.Filename)
 	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
+		return fmt.Errorf("failed to create destination file - %w", err)
 	}
 	defer dst.Close()
 
-	err = utils.StoreFile(dst, src)
+	err = helpers.StoreFile(dst, src)
 	if err != nil {
-		return fmt.Errorf("failed to save the file: %w", err)
+		return fmt.Errorf("failed to save the file - %w", err)
 	}
 
 	return nil
 }
 
 func (fc *FController) UploadFileToBucket(fileObj *os.File, filePath string, destFileName string) error {
-	gcp := &utils.GCPClient{}
+	gcp := &services.GCPClient{}
 
 	if err := gcp.SetBucket(); err != nil {
-		return fmt.Errorf("Bucket error: %w", err)
+		return fmt.Errorf("Bucket error - %w", err)
 	}
 
 	if err := gcp.Upload(fileObj, filePath, destFileName); err != nil {
-		return fmt.Errorf("Upload error: %w", err)
+		return fmt.Errorf("Upload error - %w", err)
+	}
+	return nil
+}
+
+func (fc *FController) PublishFilename(filename string) error {
+	err := services.PublishMessage(filename)
+	if err != nil {
+		log.Errorf("Pubsub failed - %s", err)
+		return err
 	}
 	return nil
 }

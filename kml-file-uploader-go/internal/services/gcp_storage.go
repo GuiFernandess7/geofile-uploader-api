@@ -1,4 +1,4 @@
-package utils
+package services
 
 import (
 	"context"
@@ -48,7 +48,7 @@ func (gcp *GCPClient) Upload(file *os.File, filePath string, objectName string) 
 	ctx := context.Background()
 	client, err := gcp.createClient(ctx, serviceAccCreds)
 	if err != nil {
-		return err
+		return fmt.Errorf("Could not create GCP client.")
 	}
 	defer client.Close()
 
