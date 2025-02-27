@@ -1,6 +1,6 @@
 ### Microservices Application for Visualization, Processing, and Uploading Geospatial Files
 
-[EN-US] 🇺🇸
+🇺🇸
 
 This repository is part of a larger application that follows a microservices architecture. Currently, it includes an API developed using the Echo framework in Go (Golang), which is the first service implemented. The API is responsible for reading, processing, and uploading geospatial files in KML format to a bucket on Google Cloud Platform (GCP). Once a file is uploaded, the system triggers a message via GCP Pub/Sub to notify other services about the availability of the new geospatial file.
 
@@ -18,7 +18,7 @@ Key features:
 
 ### Aplicação de Microserviços para Visualização, Processamento e Upload de Arquivos Geoespaciais
 
-[PT-BR] 🇧🇷
+🇧🇷
 
 Este repositório faz parte de uma aplicação maior que segue uma arquitetura de microserviços. Atualmente, conta com uma API desenvolvida utilizando o framework Echo em Go (Golang), sendo o primeiro serviço implementado. A API é responsável por ler, processar e fazer o upload de arquivos geoespaciais no formato KML para um bucket no Google Cloud Platform (GCP). Assim que um arquivo é enviado, o sistema dispara uma mensagem via GCP Pub/Sub para notificar outros serviços sobre a disponibilidade do novo arquivo geoespacial.
 
