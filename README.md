@@ -14,6 +14,10 @@ Key features:
 - Pub/Sub message emission for notifying new files.
 - This solution is ideal for systems that require real-time integration with geospatial data, leveraging Google Cloud's infrastructure.
 
+### Architeture
+
+https://github.com/user-attachments/assets/ab27f2d3-9466-465f-8988-27da1d488e6f
+
 <hr>
 
 ### Aplicação de Microserviços para Visualização, Processamento e Upload de Arquivos Geoespaciais
