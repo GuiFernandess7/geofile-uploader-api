@@ -43,32 +43,39 @@ func ProcessFile(c echo.Context, file *multipart.FileHeader, log *logrus.Logger)
 
 func UploadToBucket(file *multipart.FileHeader, filePath string, log *logrus.Logger) error {
 	log.Infof("[INFO] - Sending File [%s] to GCP Bucket...", file.Filename)
-	return nil
 
 	currentFile, err := helpers.OpenLocalFile(filePath)
 	if err != nil {
 		log.Errorf("[ERROR] - Local File %s not read: %v", file.Filename, err)
 		return fmt.Errorf("file not read: %w", err)
 	}
-	defer currentFile.Close()
 
-	fileManager := fileController.FController{File: file}
-	err = fileManager.UploadFileToBucket(currentFile, filePath, file.Filename)
-	if err != nil {
-		log.Errorf("[ERROR] - Local File %s not sent: %v", file.Filename, err)
-		return fmt.Errorf("file not read: %w", err)
-	}
+	go func() {
+        defer currentFile.Close()
+        fileManager := fileController.FController{File: file}
+        err = fileManager.UploadFileToBucket(currentFile, filePath, file.Filename)
+        if err != nil {
+            log.Errorf("[ERROR] - Local File %s not sent: %v", file.Filename, err)
+        } else {
+            log.Infof("[SUCCESS] - File %s uploaded!", file.Filename)
+        }
+    }()
 
 	return nil
 }
 
 func PublishToPubSub(filename string, log *logrus.Logger) error {
 	fileManager := fileController.FController{}
-	err := fileManager.PublishFilename(filename)
-	if err != nil {
-		log.Errorf("[ERROR] - Publish message failed for file: %v - %v", filename, err)
-		return fmt.Errorf("file not read: %w", err)
-	}
+
+	go func() {
+		err := fileManager.PublishFilename(filename)
+		if err != nil {
+			log.Errorf("[ERROR] - Publish message failed for file: %v - %v", filename, err)
+		} else {
+			log.Infof("[SUCCESS] - Filename %s emitted successfully!", filename)
+		}
+	}()
+
 	return nil
 }
 

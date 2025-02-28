@@ -52,21 +52,20 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
 		}
 		log.Infof("[{%s}] - Upload file - OK.", file.Filename)
 
-		//err = handlers.PublishToPubSub(file.Filename, log)
-		//if err != nil {
-		//	return c.JSON(http.StatusInternalServerError, models.FileResponse{
-		//		Status:  http.StatusInternalServerError,
-		//		Message: err.Error(),
-		//	})
-		//}
-		//log.Infof("[{%s}] - Publishing filename - OK.", file.Filename)
+	    err = handlers.PublishToPubSub(file.Filename, log)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, models.FileResponse{
+				Status:  http.StatusInternalServerError,
+				Message: err.Error(),
+			})
+		}
+		log.Infof("[{%s}] - Publishing filename - OK.", file.Filename)
 
 		log.Infof("[END] - File %s sent successfully", file.Filename)
-		return c.JSON(http.StatusOK, models.FileResponse{
-			Status:   http.StatusOK,
-			Message:  "File uploaded successfully",
+		return c.JSON(http.StatusAccepted, models.FileResponse{
+			Status:   http.StatusAccepted,
+			Message:  "File upload started",
 			Filename: &file.Filename,
 		})
 	}
 }
-
