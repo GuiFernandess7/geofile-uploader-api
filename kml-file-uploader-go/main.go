@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"kmlSender/internal/routes"
@@ -13,23 +12,39 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func setUpEnv(local bool) error {
-	if local {
-		err := godotenv.Load()
-		if err != nil {
-			return fmt.Errorf("error loading .env file: %w", err)
-		}
-		log.Println("Successfully loaded environment variables from .env file.")
-	}
+func setUpEnv(local bool, log *logrus.Logger) error {
+    if local {
+        err := godotenv.Load()
+        if err != nil {
+            return fmt.Errorf("error loading .env file: %w", err)
+        }
+        log.Println("Successfully loaded environment variables from .env file.")
+    }
 
-	bucketName := os.Getenv("bucket_name")
-	if bucketName == "" {
-		err := fmt.Errorf("bucket_name is not set in environment variables")
-		return err
-	}
+    projectID := os.Getenv("PROJECT_ID")
+    log.Printf("Loaded Project ID: %s", projectID)
 
-	log.Printf("Using bucket: %s", bucketName)
-	return nil
+    if projectID == "" {
+        err := fmt.Errorf("PROJECT_ID is not set in environment variables")
+        return err
+    }
+    log.Printf("Using project ID: %s", projectID)
+
+    bucketName := os.Getenv("bucket_name")
+    if bucketName == "" {
+        err := fmt.Errorf("bucket_name is not set in environment variables")
+        return err
+    }
+    log.Printf("Using bucket: %s", bucketName)
+
+    credentialsFile := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    if credentialsFile == "" {
+        err := fmt.Errorf("GOOGLE_APPLICATION_CREDENTIALS is not set in environment variables")
+        return err
+    }
+    log.Printf("Using credentials file: %s", credentialsFile)
+
+    return nil
 }
 
 func main() {
@@ -40,7 +55,7 @@ func main() {
 	})
 
 	local := true
-	err := setUpEnv(local)
+	err := setUpEnv(local, log)
 	if err != nil {
 		log.Errorf("Error setting up env variables: %v", err)
 		return
