@@ -42,41 +42,38 @@ func ProcessFile(c echo.Context, file *multipart.FileHeader, log *logrus.Logger)
 }
 
 func UploadToBucket(file *multipart.FileHeader, filePath string, log *logrus.Logger) error {
-	log.Infof("[INFO] - Sending File [%s] to GCP Bucket...", file.Filename)
+    log.Infof("[INFO] - Sending File [%s] to GCP Bucket...", file.Filename)
 
-	currentFile, err := helpers.OpenLocalFile(filePath)
-	if err != nil {
-		log.Errorf("[ERROR] - Local File %s not read: %v", file.Filename, err)
-		return fmt.Errorf("file not read: %w", err)
-	}
+    currentFile, err := helpers.OpenLocalFile(filePath)
+    if err != nil {
+        log.Errorf("[ERROR] - Local File %s not read: %v", file.Filename, err)
+        return fmt.Errorf("file not read: %w", err)
+    }
+    defer currentFile.Close()
 
-	go func() {
-        defer currentFile.Close()
-        fileManager := fileController.FController{File: file}
-        err = fileManager.UploadFileToBucket(currentFile, filePath, file.Filename)
-        if err != nil {
-            log.Errorf("[ERROR] - Local File %s not sent: %v", file.Filename, err)
-        } else {
-            log.Infof("[SUCCESS] - File %s uploaded!", file.Filename)
-        }
-    }()
+    fileManager := fileController.FController{File: file}
+    err = fileManager.UploadFileToBucket(currentFile, filePath, file.Filename)
+    if err != nil {
+        log.Errorf("[ERROR] - File %s not sent: %v", file.Filename, err)
+        return fmt.Errorf("upload failed for file %s: %w", file.Filename, err)
+    }
 
-	return nil
+    log.Infof("[%s] - File upload started!", file.Filename)
+    return nil
 }
 
+
 func PublishToPubSub(filename string, log *logrus.Logger) error {
-	fileManager := fileController.FController{}
+    fileManager := fileController.FController{}
 
-	go func() {
-		err := fileManager.PublishFilename(filename)
-		if err != nil {
-			log.Errorf("[ERROR] - Publish message failed for file: %v - %v", filename, err)
-		} else {
-			log.Infof("[SUCCESS] - Filename %s emitted successfully!", filename)
-		}
-	}()
+    err := fileManager.PublishFilename(filename)
+    if err != nil {
+        log.Errorf("[ERROR] - Publish message failed for file: %v - %v", filename, err)
+        return fmt.Errorf("failed to publish filename %s: %w", filename, err)
+    }
 
-	return nil
+    log.Infof("[SUCCESS] - Filename %s emitted successfully!", filename)
+    return nil
 }
 
 func CleanUpFile(filePath string, log *logrus.Logger) {
