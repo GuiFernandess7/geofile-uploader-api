@@ -2,21 +2,20 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"cloud.google.com/go/pubsub"
 	log "github.com/sirupsen/logrus"
-)
-
-var (
-	projectID = os.Getenv("project_id")
-	topicID = os.Getenv("pubsub-topic")
+	"google.golang.org/api/option"
 )
 
 func PublishMessage(filename string) error {
+	projectID := os.Getenv("PROJECT_ID")
+	topicID := os.Getenv("TOPIC_ID")
+	credentialsFile := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectID)
+
+	client, err := pubsub.NewClient(ctx, projectID, option.WithCredentialsFile(credentialsFile))
 	if err != nil {
 		log.Fatalf("Error creating pubsub client: %v", err)
 		return err
@@ -29,12 +28,10 @@ func PublishMessage(filename string) error {
 		Data: []byte(filename),
 	})
 
-	id, err := result.Get(ctx)
+	_, err = result.Get(ctx)
 	if err != nil {
 		log.Fatalf("Erro publishing message: %v", err)
 		return err
 	}
-
-	fmt.Printf("Filename '%s' published successfully! ID: %s\n", filename, id)
 	return nil
 }
