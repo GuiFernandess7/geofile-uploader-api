@@ -1,11 +1,10 @@
 package routes
 
 import (
-	"net/http"
-
 	"kmlSender/internal/handlers"
 	"kmlSender/internal/models"
 	customMiddleware "kmlSender/internal/services"
+	"net/http"
 
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
@@ -27,45 +26,37 @@ func RegisterRoutes(router *echo.Echo, log *logrus.Logger) {
 }
 
 func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		log.Info("[BEGIN] - Request received on root endpoint - OK.")
+    return func(c echo.Context) error {
+        log.Info("[BEGIN] - Request received on root endpoint - OK.")
 
-		file, err := handlers.ReceiveFile(c, log)
-		if err != nil {
-			return err
-		}
-		log.Infof("[{%s}] - Received file - OK.", file.Filename)
+        file, err := handlers.ReceiveFile(c, log)
+        if err != nil {
+            return err
+        }
+        log.Infof("[{%s}] - Received file - OK.", file.Filename)
 
-		filePath, err := handlers.ProcessFile(c, file, log)
-		if err != nil {
-			return err
-		}
-		defer handlers.CleanUpFile(filePath, log)
-		log.Infof("[{%s}] - Processing file - OK.", file.Filename)
+        filePath, err := handlers.ProcessFile(c, file, log)
+        if err != nil {
+            return err
+        }
+        log.Infof("[{%s}] - Processing file - OK.", file.Filename)
 
-		err = handlers.UploadToBucket(file, filePath, log)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.FileResponse{
-				Status:  http.StatusInternalServerError,
-				Message: err.Error(),
-			})
-		}
-		log.Infof("[{%s}] - Upload file - OK.", file.Filename)
+        err = handlers.UploadToBucket(file, filePath, log)
+        if err != nil {
+            return err
+        }
 
-	    err = handlers.PublishToPubSub(file.Filename, log)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.FileResponse{
-				Status:  http.StatusInternalServerError,
-				Message: err.Error(),
-			})
-		}
-		log.Infof("[{%s}] - Publishing filename - OK.", file.Filename)
+    	err = handlers.PublishToPubSub(file.Filename, log)
+        if err != nil {
+            return err
+        }
 
-		log.Infof("[END] - File %s sent successfully", file.Filename)
-		return c.JSON(http.StatusAccepted, models.FileResponse{
-			Status:   http.StatusAccepted,
-			Message:  "File upload started",
-			Filename: &file.Filename,
-		})
-	}
+        handlers.CleanUpFile(filePath, log)
+        log.Infof("[END] - File %s uploaded, published, and cleaned up successfully", file.Filename)
+        return c.JSON(http.StatusAccepted, models.FileResponse{
+            Status:   http.StatusAccepted,
+            Message:  "File upload started.",
+            Filename: &file.Filename,
+        })
+    }
 }
