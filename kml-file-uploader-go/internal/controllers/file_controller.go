@@ -6,8 +6,6 @@ import (
 	"kmlSender/internal/services"
 	"mime/multipart"
 	"os"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type FController struct {
@@ -61,7 +59,6 @@ func (fc *FController) UploadFileToBucket(fileObj *os.File, filePath string, des
 func (fc *FController) PublishFilename(filename string) error {
 	err := services.PublishMessage(filename)
 	if err != nil {
-		log.Errorf("Pubsub failed - %s", err)
 		return err
 	}
 	return nil
