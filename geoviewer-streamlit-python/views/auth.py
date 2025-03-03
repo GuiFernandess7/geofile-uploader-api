@@ -5,26 +5,42 @@ import re
 from email_validator import validate_email, EmailNotValidError
 from dotenv import load_dotenv
 
+st.set_page_config(
+    page_title="Authentication",
+    page_icon="🌿",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
 st.markdown(
     """
     <style>
-    /* Set the page to 90% scale */
-    html {
-        zoom: 0.8;
-    }
-    /* Prevent scrolling */
-    body {
-        overflow: hidden;
-    }
-    /* Adjust the main container */
-    .stApp {
-        max-width: 100%;
-        margin: 0 auto;
-        padding: 1rem;
-    }
+        .stTabs [data-baseweb="tab-list"] button {
+            color: green !important;
+        }
+
+        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+            border-bottom: 2px solid green !important;
+            color: green !important;
+        }
+
+        .stButton>button {
+            background-color: green !important;
+            color: white !important;
+            border-radius: 8px;
+            border: none;
+        }
+
+        .stButton>button:hover {
+            background-color: darkgreen !important;
+        }
+
+        .stTextInput>div>div>input {
+            border: 2px solid green !important;
+        }
     </style>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
 )
 
 load_dotenv()
@@ -102,38 +118,53 @@ def authenticate(email, password):
         st.error(f"Error: {str(e)}")
         return None
 
-st.title("Authentication")
+col1, col2 = st.columns([1, 1])
 
-tab1, tab2 = st.tabs(["Sign-Up", "Login"])
+with col2:
+    st.markdown(
+        """
+        <style>
+        .vertical-center {
+            display: flex;
+            justify-content: right;
+            align-items: center;
+        }
+        </style>
+        <div class="vertical-center">
+        """,
+        unsafe_allow_html=True,
+    )
 
-with tab1:
-    st.header("Signup")
-    email_signup = st.text_input("Enter your email (Sign-Up)")
-    password_signup = st.text_input("Enter your password (Sign-Up)", type="password")
+    st.image("assets/logo2.png", width=470)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    if st.button("Register"):
-        if email_signup and password_signup:
-            email_signup = validate_email_input(email_signup)
-            if email_signup and validate_password_input(password_signup):
-                id_token = sign_up(email_signup, password_signup)
-                if id_token:
-                    st.success("Registration successful!")
-                    st.rerun()
-                else:
-                    st.error("Error creating user.")
+with col1:
+    tab1, tab2 = st.tabs(["Sign Up", "Login"])
 
-with tab2:
-    st.header("Login")
-    email_login = st.text_input("Enter your email (Login)")
-    password_login = st.text_input("Enter your password (Login)", type="password")
+    with tab1:
+        st.header("Sign Up")
+        email_signup = st.text_input("Enter your email (Sign-Up)")
+        password_signup = st.text_input("Enter your password (Sign-Up)", type="password")
 
-    if st.button("Login"):
-        if email_login and password_login:
-            email_login = validate_email_input(email_login)
-            if email_login:
-                id_token = authenticate(email_login, password_login)
-                if id_token:
-                    st.success("Login successful!")
-                    st.rerun()
-                else:
-                    st.error("Login error. Please try again later.")
+        if st.button("Register"):
+            if email_signup and password_signup:
+                email_signup = validate_email_input(email_signup)
+                if email_signup and validate_password_input(password_signup):
+                    id_token = sign_up(email_signup, password_signup)
+                    if id_token:
+                        st.success("Registration successful!")
+                        st.rerun()
+
+    with tab2:
+        st.header("Login")
+        email_login = st.text_input("Enter your email (Login)")
+        password_login = st.text_input("Enter your password (Login)", type="password")
+
+        if st.button("Login"):
+            if email_login and password_login:
+                email_login = validate_email_input(email_login)
+                if email_login:
+                    id_token = authenticate(email_login, password_login)
+                    if id_token:
+                        st.success("Login successful!")
+                        st.rerun()

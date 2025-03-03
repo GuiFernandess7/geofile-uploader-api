@@ -14,8 +14,13 @@ logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
 login_page = st.Page("views/auth.py", title="Log out", icon=":material/logout:")
 
 dashboard = st.Page(
-    "views/map.py", title="Dashboard", icon=":material/dashboard:", default=True
+    "views/map.py", title="Dashboard", icon=":material/map:", default=True
 )
+
+dashboard = st.Page(
+    "views/upload.py", title="Upload", icon=":material/map:", default=True
+)
+
 if st.session_state.logged_in:
     pg = st.navigation(
         {
