@@ -22,33 +22,45 @@ def validate_message(message, logger: logging.Logger):
         logger.error(f"Message '{message}' is not valid")
         raise ValidationError(f"Message '{message}' is not valid.")
 
+def file_exists(filepath):
+    return os.path.exists(filepath)
+
+def download_geofile(filename, destination_filepath, logger):
+    logger.info(f"[{filename}] - Downloading geofile from bucket...")
+    try:
+        with GCPStorageUploader(bucket_name=BUCKET_NAME, destination_path=destination_filepath, logger=logger) as uploader:
+            uploader.download_blob(filename)
+    except Exception as e:
+        logger.error(f"[{filename}] - Error downloading file from bucket: {e}")
+        raise GCPStorageError(f"Error downloading file from bucket", e)
+
+def remove_geofile(filepath, logger):
+    try:
+        os.remove(filepath)
+    except Exception as e:
+        logger.error(f"[{filepath}] - Error removing geofile: {e}")
+        raise Exception(f"Error removing geofile: {e}")
+
+def process_geofile(filepath):
+    pass
+
 def start_geoprocessing(message_str, logger: logging.Logger, env='dev'):
     """Run geoprocessing"""
     logger.info(f"[{message_str}] -> Validading message...")
     validate_message(message_str, logger)
     filename = message_str
-    logger.info(f"[{message_str}] - Downloading geofile from bucket...")
     destination_filepath = f"{DESTINATION_PATH}/{filename}"
 
     logger.info(f"[{message_str}] - Checking if file exists...")
-    # TODO: Check if file exists
-
-    try:
-        with GCPStorageUploader(BUCKET_NAME, DESTINATION_PATH, logger) as uploader:
-            uploader.download_blob(destination_filepath)
-    except Exception as e:
-        logger.error(f"[{message_str}] - Error downloading file from bucket: {e}")
-        raise GCPStorageError(f"Error downloading file from bucket", e)
-
-    logger.info(f"[{filename}] - File downloaded successfully!")
+    if not file_exists(destination_filepath):
+        download_geofile(filename, destination_filepath, logger)
+    else:
+        logger.info(f"[{filename}] - File already exists")
 
     logger.info(f"[{filename}] - Processing geofile...")
     # TODO: File processing
     logger.info(f"[{filename}] - Processing Complete!")
 
     logger.info(f"[{filename}] - Removing file...")
-    os.remove(destination_filepath)
-
-
-
-
+    remove_geofile(destination_filepath, logger)
+    logger.info(f"[{filename}] - File removed successfully.")
