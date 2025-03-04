@@ -15,7 +15,8 @@ class GCPStorageUploader:
 
     def download_blob(self, source_blob_name):
         """Download geofile from bucket"""
-        blob = self.bucket.blob(source_blob_name)
+        bucket = self.storage_client.bucket(self.bucket_name)
+        blob = bucket.blob(source_blob_name)
         blob.download_to_filename(self.destination_path)
 
         self.logger.info(
