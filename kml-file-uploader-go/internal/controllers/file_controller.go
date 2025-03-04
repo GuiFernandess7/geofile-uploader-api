@@ -50,9 +50,9 @@ func (fc *FController) UploadFileToBucket(fileObj *os.File, filePath string, des
 		return fmt.Errorf("Bucket error - %w", err)
 	}
 
-	//if err := gcp.Upload(fileObj, filePath, destFileName); err != nil {
-	//	return fmt.Errorf("Upload error - %w", err)
-	//}
+	if err := gcp.Upload(fileObj, filePath, destFileName); err != nil {
+		return fmt.Errorf("Upload error - %w", err)
+	}
 	return nil
 }
 

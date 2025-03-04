@@ -2,3 +2,7 @@ kml-file-uploader-go/tmp/*
 .env
 .creds
 venv
+.venv
+__pycache__
+uv.lock
+.vscode

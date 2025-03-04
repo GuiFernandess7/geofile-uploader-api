@@ -69,7 +69,7 @@ func main() {
 
 	router := echo.New()
 	routes.RegisterRoutes(router, log)
-	if err := router.Start(":8000"); err != nil {
+	if err := router.Start(":8090"); err != nil {
 		log.Fatalf("Error starting server: %v", err)
 	}
 }

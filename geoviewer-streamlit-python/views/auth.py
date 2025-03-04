@@ -149,10 +149,10 @@ with col1:
         if st.button("Register"):
             if email_signup and password_signup:
                 email_signup = validate_email_input(email_signup)
+                st.success("Registration successful!")
                 if email_signup and validate_password_input(password_signup):
                     id_token = sign_up(email_signup, password_signup)
                     if id_token:
-                        st.success("Registration successful!")
                         st.rerun()
 
     with tab2:
