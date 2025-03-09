@@ -13,9 +13,10 @@ import (
 
 type GCPClient struct {
 	bucketName string
+	Client 	   *storage.Client
 }
 
-func (gcp *GCPClient) createClient(ctx context.Context, serviceAccCreds string) (*storage.Client, error) {
+func (gcp *GCPClient) CreateClient(ctx context.Context, serviceAccCreds string) error {
 	var client *storage.Client
 	var err error
 
@@ -26,9 +27,11 @@ func (gcp *GCPClient) createClient(ctx context.Context, serviceAccCreds string) 
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to create client: %w", err)
+		return fmt.Errorf("failed to create client: %w", err)
 	}
-	return client, nil
+
+	gcp.Client = client
+	return nil
 }
 
 
@@ -42,14 +45,32 @@ func (gcp *GCPClient) SetBucket() error {
 	return nil
 }
 
+/* func (gcp *GCPClient) ObjectExists(client *storage.Client, fileName string, ctx context.Context) (bool, error) {
+    blob := client.Bucket(gcp.bucketName).Object(fileName)
+    _, err := blob.Attrs(ctx)
+    if err == storage.ErrObjectNotExist {
+        return false, nil
 
-func (gcp *GCPClient) Upload(file *os.File, filePath string, objectName string) error {
-	serviceAccCreds := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    } else if err != nil {
+        log.Printf("Error checking existence of object %s: %v", fileName, err)
+        return false, fmt.Errorf("error checking existence of object %s: %w", fileName, err)
+    }
+    return true, nil
+} */
+
+func (gcp *GCPClient) ObjectExists(client *storage.Client, fileName string, ctx context.Context) (bool, error) {
+    blob := client.Bucket(gcp.bucketName).Object(fileName)
+    _, err := blob.Attrs(ctx)
+    if errors.Is(err, storage.ErrObjectNotExist) {
+        return false, nil
+    } else if err != nil {
+        return false, fmt.Errorf("error checking existence of object %s: %w", fileName, err)
+    }
+    return true, nil
+}
+
+func (gcp *GCPClient) Upload(client storage.Client, file *os.File, filePath string, objectName string) error {
 	ctx := context.Background()
-	client, err := gcp.createClient(ctx, serviceAccCreds)
-	if err != nil {
-		return fmt.Errorf("Could not create GCP client.")
-	}
 	defer client.Close()
 
 	bucket := client.Bucket(gcp.bucketName)
@@ -58,7 +79,7 @@ func (gcp *GCPClient) Upload(file *os.File, filePath string, objectName string) 
 	writer := bucket.Object(objectName).NewWriter(ctx)
 	defer writer.Close()
 
-	_, err = io.Copy(writer, file)
+	_, err := io.Copy(writer, file)
 	if err != nil {
 		return fmt.Errorf("failed to copy file to bucket: %w", err)
 	}

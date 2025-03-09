@@ -31,28 +31,45 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
 
         file, err := handlers.ReceiveFile(c, log)
         if err != nil {
-            return err
+            return c.JSON(http.StatusBadRequest, models.FileResponse{
+                Status:  http.StatusBadRequest,
+                Message: err.Error(),
+                Filename: nil,
+            })
         }
         log.Infof("[{%s}] - Received file - OK.", file.Filename)
 
         filePath, err := handlers.ProcessFile(c, file, log)
         if err != nil {
-            return err
+            return c.JSON(http.StatusInternalServerError, models.FileResponse{
+                Status:  http.StatusInternalServerError,
+                Message: err.Error(),
+                Filename: nil,
+            })
         }
         log.Infof("[{%s}] - Processing file - OK.", file.Filename)
 
-        err = handlers.UploadToBucket(file, filePath, log)
+        err = handlers.UploadToBucket(c, file, filePath, log)
         if err != nil {
-            return err
+            return c.JSON(http.StatusInternalServerError, models.FileResponse{
+                Status:  http.StatusInternalServerError,
+                Message: err.Error(),
+                Filename: nil,
+            })
         }
 
-    	err = handlers.PublishToPubSub(file.Filename, log)
+        err = handlers.PublishToPubSub(file.Filename, log)
         if err != nil {
-            return err
+            return c.JSON(http.StatusInternalServerError, models.FileResponse{
+                Status:  http.StatusInternalServerError,
+                Message: err.Error(),
+                Filename: nil,
+            })
         }
 
         handlers.CleanUpFile(filePath, log)
         log.Infof("[END] - File %s uploaded, published, and cleaned up successfully", file.Filename)
+
         return c.JSON(http.StatusAccepted, models.FileResponse{
             Status:   http.StatusAccepted,
             Message:  "File upload started.",

@@ -3,64 +3,57 @@ package handlers
 import (
 	"fmt"
 	"mime/multipart"
-	"net/http"
 
 	fileController "kmlSender/internal/controllers"
 	"kmlSender/internal/helpers"
-	"kmlSender/internal/models"
 
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
 
 func ReceiveFile(c echo.Context, log *logrus.Logger) (*multipart.FileHeader, error) {
-	file, err := c.FormFile("file")
-	if err != nil {
-		log.Errorf("[ERROR] - Failed to receive file - %v", err)
-		return nil, c.JSON(http.StatusBadRequest, models.FileResponse{
-			Status:  http.StatusBadRequest,
-			Message: "Failed to receive file: " + err.Error(),
-		})
-	}
-	return file, nil
+    file, err := c.FormFile("file")
+    if err != nil {
+        log.Errorf("[ERROR] - Failed to receive file - %v", err)
+        return nil, fmt.Errorf("failed to receive file: %w", err)
+    }
+    return file, nil
 }
 
 func ProcessFile(c echo.Context, file *multipart.FileHeader, log *logrus.Logger) (string, error) {
-	fileManager := fileController.FController{File: file}
-	err := fileManager.DownloadFile(".kml", "tmp")
-	if err != nil {
-		log.Errorf("[ERROR] - File %s not processed: %v", file.Filename, err)
-		return "", c.JSON(http.StatusInternalServerError, models.FileResponse{
-			Status:  http.StatusInternalServerError,
-			Message: err.Error(),
-		})
-	}
+    fileManager := fileController.FController{File: file}
+    err := fileManager.DownloadFile(".kml", "tmp")
+    if err != nil {
+        log.Errorf("[ERROR] - File %s not processed: %v", file.Filename, err)
+        return "", fmt.Errorf("failed to process file: %w", err)
+    }
 
-	filePath := fmt.Sprintf("tmp/%s", file.Filename)
-	log.Infof("[DOWNLOAD] - File %s downloaded successfully", file.Filename)
-	return filePath, nil
+    filePath := fmt.Sprintf("tmp/%s", file.Filename)
+    log.Infof("[DOWNLOAD] - File %s downloaded successfully", file.Filename)
+    return filePath, nil
 }
 
-func UploadToBucket(file *multipart.FileHeader, filePath string, log *logrus.Logger) error {
+func UploadToBucket(c echo.Context, file *multipart.FileHeader, filePath string, log *logrus.Logger) error {
     log.Infof("[INFO] - Sending File [%s] to GCP Bucket...", file.Filename)
 
     currentFile, err := helpers.OpenLocalFile(filePath)
     if err != nil {
         log.Errorf("[ERROR] - Local File %s not read: %v", file.Filename, err)
-        return fmt.Errorf("file not read: %w", err)
+        return fmt.Errorf("failed to read local file: %w", err)
     }
     defer currentFile.Close()
 
     fileManager := fileController.FController{File: file}
-    err = fileManager.UploadFileToBucket(currentFile, filePath, file.Filename)
+    err = fileManager.StartUpload(currentFile, filePath, file.Filename)
     if err != nil {
         log.Errorf("[ERROR] - File %s not sent: %v", file.Filename, err)
-        return fmt.Errorf("upload failed for file %s: %w", file.Filename, err)
+        return fmt.Errorf("failed to upload file: %w", err)
     }
 
     log.Infof("[%s] - File upload started!", file.Filename)
     return nil
 }
+
 
 
 func PublishToPubSub(filename string, log *logrus.Logger) error {
