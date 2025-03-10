@@ -1,4 +1,5 @@
-kml-file-uploader-go/tmp/*
+geofile-uploader-go/tmp/*
+geoprocess_python/tmp
 .env
 .creds
 venv
