@@ -2,8 +2,10 @@ import logging
 import re
 import os
 
-from app.utils.errors import ValidationError
+from app.domain.utils.errors import ValidationError
 from app.domain.file_manager import GeoFile
+from app.domain.xml_parser import KMLHandler
+from app.domain.file_repo import FileRepository
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -22,23 +24,27 @@ def validate_message(message, logger: logging.Logger):
         logger.error(f"Message '{message}' is not valid")
         raise ValidationError(f"Message '{message}' is not valid.")
 
-def start_geoprocessing(message_str, logger: logging.Logger, env='dev'):
+def extract_data_from_geofile(geofile_manager: GeoFile, logger: logging.Logger, filename: str):
+    logger.info(f"[{filename}] - Processing geofile...")
+    geometries = geofile_manager.extract_geometries()
+    fields = geofile_manager.extract_fields()
+    logger.info(f"[{filename}] - Processing Complete!")
+    return fields, geometries
+
+def start_geoprocess(message_str, logger: logging.Logger, env='dev'):
     """Run geoprocessing"""
     validate_message(message_str, logger)
     filename = message_str
     destination_filepath = f"{DESTINATION_PATH}/{filename}"
 
-    geofile_manager = GeoFile(destination_filepath, filename)
-    if not geofile_manager.exists(logger):
-        geofile_manager.download_from_bucket(filename, destination_filepath, logger)
+    geofile_manager = GeoFile(destination_filepath, filename, logger)
+    geofile_manager.set_handler(handler=KMLHandler())
+    if not geofile_manager.exists():
+        geofile_manager.download_from_bucket(BUCKET_NAME)
 
-    logger.info(f"[{filename}] - Processing geofile...")
-    geometries = geofile_manager.extract_geometries(logger)
-    fields = geofile_manager.extract_fields(logger)
-    logger.info(f"[{filename}] - Processing Complete!")
+    fields, geometries = extract_data_from_geofile(geofile_manager, logger, destination_filepath)
+    logger.info(f"[{filename}] - Placemarks found: {len(fields)}")
 
-    logger.info(f"[{filename}] - Geometries found: {len(geometries)}")
-    if len(geometries) != len(fields):
-        raise ValueError("Number of geometries different from number of fields.")
+    FileRepository.insert_file(name=filename)
 
     #geofile_manager.delete(logger)

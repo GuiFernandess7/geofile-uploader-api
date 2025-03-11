@@ -1,9 +1,0 @@
-[package]
-name = "kml_parser"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-pyo3 = { version = "0.20", features = ["extension-module"] }
-quick-xml = "0.30"
-log = "0.4"

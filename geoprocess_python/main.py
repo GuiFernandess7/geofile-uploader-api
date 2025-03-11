@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import base64
 from sys import platform
 
-from app.run import start_geoprocessing
+from app.run import start_geoprocess
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -28,7 +28,7 @@ def run(request, event=""):
             return {"error": "Invalid Base64 format"}, 400
 
         logging.info(f"Message received and decoded: {decoded_str}")
-        start_geoprocessing(decoded_str, logger, env="dev")
+        start_geoprocess(decoded_str, logger, env="dev")
         return {"message": "Success"}, 200
 
     except Exception as e:

@@ -1,73 +1,80 @@
 import os
 
-from app.utils.errors import GCPStorageError
+from app.domain.utils.errors import GCPStorageError
 from app.services.gcp_storage import GCPStorageUploader
 
 import geopandas as gpd
 from fiona import supported_drivers
-from fastkml import KML
-from fastkml.utils import find_all
-from fastkml import SchemaData
+import logging
+import xml.sax
+from pprint import pprint
 
+from app.domain.xml_parser import KMLHandler
 class GeoFile:
 
-    def __init__(self, filepath: str, filename: str):
+    def __init__(self, filepath: str, filename: str, logger: logging.Logger) -> None:
         self.filepath = filepath
         self.filename = filename
+        self.logger = logger
+        self.handler = None
+        self.parser = xml.sax.make_parser()
 
-    def exists(self, logger) -> bool:
-        logger.info(f"[{self.filename}] - Checking if file exists...")
+    def set_handler(self, handler: KMLHandler):
+        self.handler = handler
+        self.parser.setContentHandler(self.handler)
+
+    def exists(self) -> bool:
+        self.logger.info(f"[{self.filename}] - Checking if file exists...")
         if not os.path.exists(self.filepath):
-            logger.info(f"[{self.filename}] - Geofile does not exist in folder.")
+            self.logger.info(f"[{self.filename}] - Geofile does not exist in folder.")
             return False
-        logger.info(f"[{self.filename}] - File already exists.")
+        self.logger.info(f"[{self.filename}] - File already exists.")
         return True
 
-    def download_from_bucket(self, bucket_name, logger):
-        logger.info(f"[{self.filename}] - Downloading geofile from bucket...")
+    def download_from_bucket(self, bucket_name):
+        self.logger.info(f"[{self.filename}] - Downloading geofile from bucket...")
         try:
-            with GCPStorageUploader(bucket_name=bucket_name, destination_path=self.filepath, logger=logger) as uploader:
+            with GCPStorageUploader(bucket_name=bucket_name, destination_path=self.filepath, logger=self.logger) as uploader:
                 uploader.download_blob(self.filename)
-            logger.info(f"[{self.filename}] - Geofile downloaded successfully!")
+            self.logger.info(f"[{self.filename}] - Geofile downloaded successfully!")
         except Exception as e:
-            logger.error(f"[{self.filename}] - Error downloading file from bucket: {e}")
+            self.logger.error(f"[{self.filename}] - Error downloading file from bucket: {e}")
             raise GCPStorageError(f"Error downloading file from bucket", e)
 
-    def delete(self, logger):
-        logger.info(f"[{self.filename}] - Removing file...")
+    def delete(self):
+        self.logger.info(f"[{self.filename}] - Removing file...")
         try:
             os.remove(self.filepath)
-            logger.info(f"[{self.filepath}] - Geofile removed successfully!")
+            self.logger.info(f"[{self.filepath}] - Geofile removed successfully!")
         except Exception as e:
-            logger.error(f"[{self.filepath}] - Error removing geofile: {e}")
+            self.logger.error(f"[{self.filepath}] - Error removing geofile: {e}")
             raise Exception(f"Error removing geofile: {e}")
 
-    def extract_geometries(self, logger):
+    def extract_geometries(self):
         supported_drivers['LIBKML'] = 'rw'
         try:
             polygons = gpd.read_file(self.filepath, driver='KML')
             return polygons["geometry"].to_list()
         except Exception as e:
-            logger.error(f"[{self.filepath}] - Error reading geofile: {e}")
+            self.logger.error(f"[{self.filepath}] - Error reading geofile: {e}")
             raise Exception(f"Error reading geofile: {e}")
 
-    def __parse(self, logger):
+    def __parse_kml(self):
+        if not self.handler:
+            raise ValueError("Handler is not set. Call set_handler() first.")
+
         try:
-            k = KML.parse(self.filepath)
-            schemas = find_all(k, of_type=SchemaData)
-            return schemas
+            with open(self.filepath, "r", encoding="utf-8") as file:
+                self.parser.parse(file)
+            return self.handler.placemarks
         except Exception as e:
-            logger.error(f"[{self.filepath}] - Error parsing geofile: {e}")
+            self.logger.error(f"[{self.filepath}] - Error parsing geofile: {e}")
             raise Exception(f"Error parsing geofile: {e}")
 
-    def extract_fields(self, logger):
-        logger.info(f"[{self.filepath}] - Parsing file...")
-        schemas = self.__parse(logger)
-        data_list = []
-        for schema in schemas:
-            if schema.data:
-                logger.info(f"[{self.filepath}] - Reading schema...")
-                data = {simple_data.name: simple_data.value for simple_data in schema.data}
-                data_list.append(data)
-        return data_list
+    def extract_fields(self):
+        self.logger.info(f"[{self.filename}] - Parsing file...")
+        data = self.__parse_kml()
+        return data
 
+#k = KML.parse(self.filepath)
+# #fields = find_all(k, of_type=SimpleField)
