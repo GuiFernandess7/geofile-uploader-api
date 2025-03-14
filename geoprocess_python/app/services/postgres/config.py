@@ -1,5 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 class DBConnectionHandler:
     """
@@ -7,7 +10,7 @@ class DBConnectionHandler:
     """
 
     def __init__(self) -> None:
-        self.__connection_string = ...
+        self.__connection_string = os.getenv("POSTGIS_CONNECTIION_STRING")
         self.session = None
 
     def get_engine(self):

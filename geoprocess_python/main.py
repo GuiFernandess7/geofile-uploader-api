@@ -32,7 +32,7 @@ def run(request, event=""):
         return {"message": "Success"}, 200
 
     except Exception as e:
-        logging.error(f"Erro no servidor: {e}")
+        logging.error(f"Server error: {e}")
         return {"error": "Server error", "details": str(e)}, 500
 
 @app.route("/main_flask", methods=["POST"])

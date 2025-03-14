@@ -6,6 +6,7 @@ from app.domain.utils.errors import ValidationError
 from app.domain.file_manager import GeoFile
 from app.domain.xml_parser import KMLHandler
 from app.domain.file_repo import FileRepository
+from app.domain.geometry_repo import GeometryRepository
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -14,7 +15,6 @@ ALLOWED_EXTENSIONS="kml"
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DESTINATION_PATH = os.path.join(BASE_DIR, "tmp")
-
 
 def validate_message(message, logger: logging.Logger):
     """Validate PubSub message"""
@@ -25,10 +25,10 @@ def validate_message(message, logger: logging.Logger):
         raise ValidationError(f"Message '{message}' is not valid.")
 
 def extract_data_from_geofile(geofile_manager: GeoFile, logger: logging.Logger, filename: str):
-    logger.info(f"[{filename}] - Processing geofile...")
+    logger.info(f"[{filename}] - Extracting data from geofile...")
     geometries = geofile_manager.extract_geometries()
     fields = geofile_manager.extract_fields()
-    logger.info(f"[{filename}] - Processing Complete!")
+    logger.info(f"[{filename}] - Extraction Complete!")
     return fields, geometries
 
 def start_geoprocess(message_str, logger: logging.Logger, env='dev'):
@@ -42,9 +42,10 @@ def start_geoprocess(message_str, logger: logging.Logger, env='dev'):
     if not geofile_manager.exists():
         geofile_manager.download_from_bucket(BUCKET_NAME)
 
-    fields, geometries = extract_data_from_geofile(geofile_manager, logger, destination_filepath)
+    fields, geometries = extract_data_from_geofile(geofile_manager, logger, filename)
     logger.info(f"[{filename}] - Placemarks found: {len(fields)}")
 
-    FileRepository.insert_file(name=filename)
+    file_obj = FileRepository.insert_file(name=filename)
+    GeometryRepository.insert_geometries(geometries=geometries, features=fields, file_id=file_obj.id)
 
     #geofile_manager.delete(logger)

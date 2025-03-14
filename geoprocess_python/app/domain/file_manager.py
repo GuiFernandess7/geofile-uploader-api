@@ -59,6 +59,13 @@ class GeoFile:
             self.logger.error(f"[{self.filepath}] - Error reading geofile: {e}")
             raise Exception(f"Error reading geofile: {e}")
 
+    def convert_to_geojson(self):
+        from osgeo import gdal, ogr
+        srcDS = gdal.OpenEx(self.filepath)
+        filename, ext = self.filename.split('.')
+        ds = gdal.VectorTranslate(filename + ".geojson", srcDS, format='GeoJSON')
+        self.logger.info(f"[{self.filename}] - Converted to gejson")
+
     def __parse_kml(self):
         if not self.handler:
             raise ValueError("Handler is not set. Call set_handler() first.")
