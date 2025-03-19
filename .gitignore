@@ -1,5 +1,5 @@
 geofile-uploader-go/tmp/*
-geoprocess_python/tmp
+geoprocess_python/app/tmp
 geoprocess_python/dependencies
 .env
 .creds

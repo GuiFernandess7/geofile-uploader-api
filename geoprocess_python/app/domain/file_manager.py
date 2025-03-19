@@ -10,6 +10,14 @@ import xml.sax
 from pprint import pprint
 
 from app.domain.xml_parser import KMLHandler
+
+class GeoData:
+    def __init__(self, filename: str, email: str, geometries: list, fields: list):
+        self.filename = filename
+        self.email = email
+        self.geometries = geometries
+        self.fields = fields
+
 class GeoFile:
 
     def __init__(self, filepath: str, filename: str, logger: logging.Logger) -> None:
@@ -23,7 +31,7 @@ class GeoFile:
         self.handler = handler
         self.parser.setContentHandler(self.handler)
 
-    def exists(self) -> bool:
+    def exists_locally(self) -> bool:
         self.logger.info(f"[{self.filename}] - Checking if file exists...")
         if not os.path.exists(self.filepath):
             self.logger.info(f"[{self.filename}] - Geofile does not exist in folder.")
@@ -35,11 +43,16 @@ class GeoFile:
         self.logger.info(f"[{self.filename}] - Downloading geofile from bucket...")
         try:
             with GCPStorageUploader(bucket_name=bucket_name, destination_path=self.filepath, logger=self.logger) as uploader:
-                uploader.download_blob(self.filename)
-            self.logger.info(f"[{self.filename}] - Geofile downloaded successfully!")
+                if uploader.blob_exists(self.filename):
+                    self.logger.info(f"[{self.filename}] - Blob found in bucket!")
+                    uploader.download_blob(self.filename)
+                    self.logger.info(f"[{self.filename}] - Geofile downloaded successfully!")
+                else:
+                    self.logger.info(f"[{self.filename}] - Blob NOT found in bucket!")
+                    raise GCPStorageError(f"Blob NOT found in bucket!")
         except Exception as e:
             self.logger.error(f"[{self.filename}] - Error downloading file from bucket: {e}")
-            raise GCPStorageError(f"Error downloading file from bucket", e)
+            raise GCPStorageError(f"Error downloading file from bucket: {e}")
 
     def delete(self):
         self.logger.info(f"[{self.filename}] - Removing file...")

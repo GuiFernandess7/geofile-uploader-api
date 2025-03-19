@@ -55,17 +55,16 @@ func UploadToBucket(c echo.Context, file *multipart.FileHeader, filePath string,
 }
 
 
-
-func PublishToPubSub(filename string, log *logrus.Logger) error {
+func PublishToPubSub(filename string, userEmail string, log *logrus.Logger) error {
     fileManager := fileController.FController{}
 
-    err := fileManager.PublishFilename(filename)
+    err := fileManager.PublishFileAndEmail(filename, userEmail)
     if err != nil {
         log.Errorf("[ERROR] - Publish message failed for file: %v - %v", filename, err)
         return fmt.Errorf("failed to publish filename %s: %w", filename, err)
     }
 
-    log.Infof("[SUCCESS] - Filename %s emitted successfully!", filename)
+    log.Infof("[SUCCESS] - Filename and Email %s emitted successfully!", filename)
     return nil
 }
 

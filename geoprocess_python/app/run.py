@@ -3,10 +3,14 @@ import re
 import os
 
 from app.domain.utils.errors import ValidationError
-from app.domain.file_manager import GeoFile
+from app.domain.file_manager import GeoFile, GeoData
 from app.domain.xml_parser import KMLHandler
 from app.domain.file_repo import FileRepository
+from app.domain.user_email_repo import EmailRepository
 from app.domain.geometry_repo import GeometryRepository
+
+from app.domain.utils.errors import GCPStorageError
+from app.services.gcp_storage import GCPStorageUploader
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -25,27 +29,41 @@ def validate_message(message, logger: logging.Logger):
         raise ValidationError(f"Message '{message}' is not valid.")
 
 def extract_data_from_geofile(geofile_manager: GeoFile, logger: logging.Logger, filename: str):
+    """Extract """
     logger.info(f"[{filename}] - Extracting data from geofile...")
     geometries = geofile_manager.extract_geometries()
     fields = geofile_manager.extract_fields()
     logger.info(f"[{filename}] - Extraction Complete!")
     return fields, geometries
 
-def start_geoprocess(message_str, logger: logging.Logger, env='dev'):
+def update_database(geofile_data: GeoData, logger: logging.Logger):
+    email_obj = EmailRepository.insert_email(email=geofile_data.email, logger=logger)
+    file_obj = FileRepository.insert_file(name=geofile_data.filename, email_id=email_obj.id, logger=logger)
+    GeometryRepository.insert_geometries(geometries=geofile_data.geometries, features=geofile_data.fields, file_id=file_obj.id)
+
+def start_geoprocess(message: tuple, logger: logging.Logger, env='dev'):
     """Run geoprocessing"""
-    validate_message(message_str, logger)
-    filename = message_str
+    filename, email = message
+    logger.info(f"[{filename}] - Email: {email}")
+    validate_message(filename, logger)
     destination_filepath = f"{DESTINATION_PATH}/{filename}"
 
     geofile_manager = GeoFile(destination_filepath, filename, logger)
     geofile_manager.set_handler(handler=KMLHandler())
-    if not geofile_manager.exists():
-        geofile_manager.download_from_bucket(BUCKET_NAME)
+
+    try:
+        if not geofile_manager.exists_locally():
+            geofile_manager.download_from_bucket(BUCKET_NAME)
+    except GCPStorageError:
+        raise
 
     fields, geometries = extract_data_from_geofile(geofile_manager, logger, filename)
     logger.info(f"[{filename}] - Placemarks found: {len(fields)}")
-
-    file_obj = FileRepository.insert_file(name=filename)
-    GeometryRepository.insert_geometries(geometries=geometries, features=fields, file_id=file_obj.id)
-
+    geofile_data = GeoData(filename=filename, email=email, geometries=geometries, fields=fields)
+    update_database(geofile_data, logger)
     #geofile_manager.delete(logger)
+
+# eyJlbWFpbCI6ICJ0ZXN0QGdtYWlsLmNvbSIsICJmaWxlbmFtZSI6ICJlbWJhcmdvc19pY21iaW8ua21sIn0=
+# eyJlbWFpbCI6ICJ0ZXN0QGdtYWlsLmNvbSIsICJmaWxlbmFtZSI6ICJteWZpbGUua21sIn0=
+
+

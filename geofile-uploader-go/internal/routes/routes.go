@@ -29,6 +29,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
     return func(c echo.Context) error {
         log.Info("[BEGIN] - Request received on root endpoint - OK.")
 
+        user_email := handlers.ReceiveUserEmail(c, log)
         file, err := handlers.ReceiveFile(c, log)
         if err != nil {
             return c.JSON(http.StatusBadRequest, models.FileResponse{
@@ -58,7 +59,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
             })
         }
 
-        err = handlers.PublishToPubSub(file.Filename, log)
+        err = handlers.PublishToPubSub(file.Filename, user_email, log)
         if err != nil {
             return c.JSON(http.StatusInternalServerError, models.FileResponse{
                 Status:  http.StatusInternalServerError,

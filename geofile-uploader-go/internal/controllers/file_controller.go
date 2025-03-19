@@ -2,11 +2,14 @@ package fileController
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"kmlSender/internal/helpers"
 	"kmlSender/internal/services"
 	"mime/multipart"
 	"os"
+
+	"github.com/labstack/gommon/log"
 )
 
 type FController struct {
@@ -72,8 +75,20 @@ func (fc *FController) StartUpload(fileObj *os.File, filePath string, destFileNa
 }
 
 
-func (fc *FController) PublishFilename(filename string) error {
-	err := services.PublishMessage(filename)
+func (fc *FController) PublishFileAndEmail(filename string, email string) error {
+
+	messageData := map[string]string{
+        "filename": filename,
+        "email":    email,
+    }
+
+	jsonData, err := json.Marshal(messageData)
+    if err != nil {
+        log.Error("Failed to marshal JSON: ", err)
+        return err
+    }
+
+	err = services.PublishMessage(jsonData)
 	if err != nil {
 		return err
 	}

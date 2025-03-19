@@ -9,7 +9,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func PublishMessage(filename string) error {
+func PublishMessage(jsonData []byte) error {
 	projectID := os.Getenv("PROJECT_ID")
 	topicID := os.Getenv("TOPIC_ID")
 	credentialsFile := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
@@ -25,8 +25,8 @@ func PublishMessage(filename string) error {
 	topic := client.Topic(topicID)
 
 	result := topic.Publish(ctx, &pubsub.Message{
-		Data: []byte(filename),
-	})
+        Data: jsonData,
+    })
 
 	_, err = result.Get(ctx)
 	if err != nil {

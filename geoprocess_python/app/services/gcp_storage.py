@@ -13,10 +13,14 @@ class GCPStorageUploader:
         self.logger.info(f"Connected to bucket: {self.bucket_name}")
         return self
 
+    def blob_exists(self, blob_name: str) -> bool:
+        blob = self.bucket.blob(blob_name)
+        exists = blob.exists()
+        return exists
+
     def download_blob(self, source_blob_name):
         """Download geofile from bucket"""
-        bucket = self.storage_client.bucket(self.bucket_name)
-        blob = bucket.blob(source_blob_name)
+        blob = self.bucket.blob(source_blob_name)
         blob.download_to_filename(self.destination_path)
 
         self.logger.info(

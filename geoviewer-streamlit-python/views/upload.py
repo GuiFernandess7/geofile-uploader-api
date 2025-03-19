@@ -41,7 +41,8 @@ URL = "http://localhost:8090/upload-kml-file"
 
 def send_file(url, uploaded_file):
     files = {
-        "file": (uploaded_file.name, uploaded_file, uploaded_file.type)
+        "file": (uploaded_file.name, uploaded_file, uploaded_file.type),
+        "email": st.session_state.user_email
     }
     headers = {
         "Authorization": f"Bearer {st.session_state.tokenid}"

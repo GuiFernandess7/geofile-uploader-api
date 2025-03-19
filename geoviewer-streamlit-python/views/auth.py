@@ -52,6 +52,8 @@ if "tokenid" not in st.session_state:
     st.session_state["tokenid"] = ""
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
+if "user_email" not in st.session_state:
+    st.session_state.user_email = ""
 
 def validate_email_input(email):
     try:
@@ -166,5 +168,6 @@ with col1:
                 if email_login:
                     id_token = authenticate(email_login, password_login)
                     if id_token:
+                        st.session_state.user_email = email_login
                         st.success("Login successful!")
                         st.rerun()

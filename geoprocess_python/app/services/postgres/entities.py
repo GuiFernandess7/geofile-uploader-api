@@ -9,8 +9,10 @@ class FilesModel(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(20), nullable=False, unique=True)
+    email_id = Column(Integer, ForeignKey('emails.id'), nullable=False)
 
     geometries = relationship("GeometryModel", back_populates="file")
+    email = relationship("EmailModel", back_populates="files")
 
     def __repr__(self):
         return f"""File: [id={self.id}, name={self.name}]"""
@@ -27,3 +29,11 @@ class GeometryModel(Base):
 
     def __repr__(self):
         return f"Geometry: [id={self.id}, file_id={self.file_id}, geometry={self.geometry}]"
+
+class EmailModel(Base):
+    __tablename__ = 'emails'
+
+    id = Column(Integer, primary_key=True)
+    email = Column(String, unique=True, nullable=False)
+
+    files = relationship("FilesModel", back_populates="email")

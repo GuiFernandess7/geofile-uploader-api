@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import base64
 from sys import platform
+import json
 
 from app.run import start_geoprocess
 
@@ -27,8 +28,15 @@ def run(request, event=""):
         if decoded_str is None:
             return {"error": "Invalid Base64 format"}, 400
 
-        logging.info(f"Message received and decoded: {decoded_str}")
-        start_geoprocess(decoded_str, logger, env="dev")
+        try:
+            message_data = json.loads(decoded_str)
+        except json.JSONDecodeError:
+            logging.error("Decoded message is not valid JSON")
+            return {"error": "Invalid JSON format"}, 400
+
+        logging.info(f"Decoded JSON: {message_data}")
+
+        start_geoprocess((message_data["filename"], message_data["email"]), logger, env="dev")
         return {"message": "Success"}, 200
 
     except Exception as e:
