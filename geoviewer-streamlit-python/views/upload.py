@@ -2,8 +2,13 @@ import streamlit as st
 import logging
 import requests
 import time
+from styles.custom import load_all
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+load_all(title="Upload KML File")
+
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("LOGGER")
 
 st.markdown(
@@ -34,19 +39,18 @@ st.markdown(
         }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 URL = "http://localhost:8090/upload-kml-file"
 
+
 def send_file(url, uploaded_file):
     files = {
         "file": (uploaded_file.name, uploaded_file, uploaded_file.type),
-        "email": st.session_state.user_email
+        "email": st.session_state.user_email,
     }
-    headers = {
-        "Authorization": f"Bearer {st.session_state.tokenid}"
-    }
+    headers = {"Authorization": f"Bearer {st.session_state.tokenid}"}
 
     progress_bar = st.progress(0)
     status_text = st.empty()
@@ -78,7 +82,6 @@ def send_file(url, uploaded_file):
     else:
         st.error(f"Upload error: {response_data}")
 
-st.write("### Geospatial File Upload")
 
 uploaded_file = st.file_uploader(
     "Choose a geospatial file",

@@ -1,4 +1,13 @@
 import streamlit as st
+import base64
+
+
+@st.cache_data()
+def get_base64_of_bin_file(png_file):
+    with open(png_file, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False

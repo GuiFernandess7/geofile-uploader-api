@@ -40,7 +40,7 @@ st.markdown(
         }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 load_dotenv()
@@ -55,6 +55,7 @@ if "logged_in" not in st.session_state:
 if "user_email" not in st.session_state:
     st.session_state.user_email = ""
 
+
 def validate_email_input(email):
     try:
         valid = validate_email(email)
@@ -63,11 +64,15 @@ def validate_email_input(email):
         st.error("Invalid email.")
         return None
 
+
 def validate_password_input(password):
     if not re.match(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$", password):
-        st.error("Password must be at least 8 characters long, including letters and numbers.")
+        st.error(
+            "Password must be at least 8 characters long, including letters and numbers."
+        )
         return False
     return True
+
 
 def sign_up(email, password):
     try:
@@ -88,11 +93,14 @@ def sign_up(email, password):
             st.success("User registered successfully!")
             return id_token
         else:
-            st.error(f"Sign-up error: {response_data.get('error', {}).get('message', 'Unknown error')}")
+            st.error(
+                f"Sign-up error: {response_data.get('error', {}).get('message', 'Unknown error')}"
+            )
             return None
     except Exception as e:
         st.error(f"Error: {str(e)}")
         return None
+
 
 def authenticate(email, password):
     try:
@@ -114,11 +122,14 @@ def authenticate(email, password):
             st.success("Login successfull!")
             return id_token
         else:
-            st.error(f"Login error: {response_data.get('error', {}).get('message', 'Unknown error')}")
+            st.error(
+                f"Login error: {response_data.get('error', {}).get('message', 'Unknown error')}"
+            )
             return None
     except Exception as e:
         st.error(f"Error: {str(e)}")
         return None
+
 
 col1, col2 = st.columns([1, 1])
 
@@ -146,7 +157,9 @@ with col1:
     with tab1:
         st.header("Sign Up")
         email_signup = st.text_input("Enter your email (Sign-Up)")
-        password_signup = st.text_input("Enter your password (Sign-Up)", type="password")
+        password_signup = st.text_input(
+            "Enter your password (Sign-Up)", type="password"
+        )
 
         if st.button("Register"):
             if email_signup and password_signup:
