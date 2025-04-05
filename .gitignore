@@ -1,5 +1,6 @@
 geofile-uploader-go/tmp/*
 geoprocess_python/app/tmp
+geoprocess_python/app/mock
 geoprocess_python/dependencies
 geoviewer-streamlit-python/.streamlit
 .env

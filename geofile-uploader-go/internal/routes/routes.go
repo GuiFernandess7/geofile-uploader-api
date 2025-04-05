@@ -5,6 +5,7 @@ import (
 	"kmlSender/internal/models"
 	customMiddleware "kmlSender/internal/services"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
@@ -30,7 +31,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
         log.Info("[BEGIN] - Request received on root endpoint - OK.")
 
         user_email := handlers.ReceiveUserEmail(c, log)
-        file, err := handlers.ReceiveFile(c, log)
+        file, err := handlers.ReceiveKMLFile(c, log)
         if err != nil {
             return c.JSON(http.StatusBadRequest, models.FileResponse{
                 Status:  http.StatusBadRequest,
@@ -40,7 +41,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
         }
         log.Infof("[{%s}] - Received file - OK.", file.Filename)
 
-        filePath, err := handlers.ProcessFile(c, file, log)
+        filePath, err := handlers.ProcessKMLFile(c, file, log)
         if err != nil {
             return c.JSON(http.StatusInternalServerError, models.FileResponse{
                 Status:  http.StatusInternalServerError,
@@ -50,7 +51,9 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
         }
         log.Infof("[{%s}] - Processing file - OK.", file.Filename)
 
-        err = handlers.UploadToBucket(c, file, filePath, log)
+        log.Infof("[{%s}] - Converting to GeoJson...", file.Filename)
+        geojsonPath := strings.TrimSuffix(filePath, ".kml") + ".geojson"
+        err = handlers.ConvertKMLToGeoJSON(filePath, geojsonPath)
         if err != nil {
             return c.JSON(http.StatusInternalServerError, models.FileResponse{
                 Status:  http.StatusInternalServerError,
@@ -58,6 +61,17 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
                 Filename: nil,
             })
         }
+        log.Infof("[{%s}] - KML Converted successfully.", file.Filename)
+
+        err = handlers.UploadGeoJSONToBucket(c, geojsonPath, log)
+        if err != nil {
+            return c.JSON(http.StatusInternalServerError, models.FileResponse{
+                Status:  http.StatusInternalServerError,
+                Message: err.Error(),
+                Filename: nil,
+            })
+        }
+        log.Infof("[{%s}] - GeoJSON uploaded successfully.", file.Filename)
 
         err = handlers.PublishToPubSub(file.Filename, user_email, log)
         if err != nil {
@@ -69,6 +83,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
         }
 
         handlers.CleanUpFile(filePath, log)
+        handlers.CleanUpFile(geojsonPath, log)
         log.Infof("[END] - File %s uploaded, published, and cleaned up successfully", file.Filename)
 
         return c.JSON(http.StatusAccepted, models.FileResponse{

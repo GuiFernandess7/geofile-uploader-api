@@ -43,6 +43,21 @@ def load_css(img, title):
             padding: 1rem;
         }}
 
+        .css-18e3th9 {{
+            padding-left: 2rem;
+            padding-right: 0rem;
+        }}
+
+        .css-1d391kg {{
+            padding-left: 2rem;
+            padding-right: 0rem;
+        }}
+
+        .block-container {{
+            padding-left: 1rem !important;
+            padding-right: 0rem !important;
+        }}
+
         [data-testid="stAppViewContainer"] > .main {{
         background-size: 180%;
         background-position: top left;
@@ -95,32 +110,9 @@ def load_css(img, title):
 
     st.markdown(
         f"""
-        <h2 style="text-align: left; margin-top: 0;">
+        <h4 style="text-align: left; margin-top: 0;">
             {title}
-        </h2>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def load_map_page_css(title):
-    st.markdown(
-        """
-        <style>
-            .block-container {
-                padding-top: 0rem;
-                padding-bottom: 0rem;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        f"""
-        <h2 style="text-align: left; margin-top: 0;">
-            {title}
-        </h2>
+        </h4>
         """,
         unsafe_allow_html=True,
     )

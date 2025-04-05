@@ -5,11 +5,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type EmailBody struct {
+    Email string `json:"email"`
+}
+
 func ReceiveUserEmail(c echo.Context, log *logrus.Logger) string {
-    email, ok := c.Get("email").(string)
-    if !ok {
-        log.Warn("Email not found or not a string")
+    var body EmailBody
+    if err := c.Bind(&body); err != nil {
+        log.Warn("Failed to bind request body")
         return ""
     }
-    return email
+
+    if body.Email == "" {
+        log.Warn("Email is empty in request body")
+        return ""
+    }
+
+    return body.Email
 }

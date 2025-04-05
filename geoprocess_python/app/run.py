@@ -4,7 +4,6 @@ import os
 
 from app.domain.utils.errors import ValidationError
 from app.domain.file_manager import GeoFile, GeoData
-from app.domain.xml_parser import KMLHandler
 from app.domain.file_repo import FileRepository
 from app.domain.user_email_repo import EmailRepository
 from app.domain.geometry_repo import GeometryRepository
@@ -14,7 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ALLOWED_EXTENSIONS = "kml"
+ALLOWED_EXTENSIONS = "geojson"
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DESTINATION_PATH = os.path.join(BASE_DIR, "tmp")
@@ -34,10 +33,9 @@ def extract_data_from_geofile(
 ):
     """Extract features and geometries from geofile"""
     logger.info(f"[{filename}] - Extracting data from geofile...")
-    geometries = geofile_manager.extract_geometries()
-    fields = geofile_manager.extract_fields()
+    geometries, properties = geofile_manager.extract_geometries_and_properties()
     logger.info(f"[{filename}] - Extraction Complete!")
-    return fields, geometries
+    return geometries, properties
 
 
 def update_database(geofile_data: GeoData, logger: logging.Logger):
@@ -51,6 +49,7 @@ def update_database(geofile_data: GeoData, logger: logging.Logger):
         geometries=geofile_data.geometries,
         features=geofile_data.fields,
         file_id=file_obj.id,
+        logger=logger,
     )
 
 
@@ -62,7 +61,6 @@ def start_geoprocess(message: tuple, logger: logging.Logger, env="dev"):
     destination_filepath = f"{DESTINATION_PATH}/{filename}"
 
     geofile_manager = GeoFile(destination_filepath, filename, logger)
-    geofile_manager.set_handler(handler=KMLHandler())
 
     try:
         if not geofile_manager.exists_locally():
@@ -70,14 +68,19 @@ def start_geoprocess(message: tuple, logger: logging.Logger, env="dev"):
     except GCPStorageError:
         raise
 
-    fields, geometries = extract_data_from_geofile(geofile_manager, logger, filename)
-    logger.info(f"[{filename}] - Placemarks found: {len(fields)}")
+    geometries, properties = extract_data_from_geofile(
+        geofile_manager, logger, filename
+    )
+    print()
+    logger.info(f"[{filename}] - Placemarks found: {len(properties)}")
+    print(geometries)
     geofile_data = GeoData(
-        filename=filename, email=email, geometries=geometries, fields=fields
+        filename=filename, email=email, geometries=geometries, fields=properties
     )
     update_database(geofile_data, logger)
-    # geofile_manager.delete(logger)
+    geofile_manager.delete()
 
 
 # eyJlbWFpbCI6ICJ0ZXN0QGdtYWlsLmNvbSIsICJmaWxlbmFtZSI6ICJlbWJhcmdvc19pY21iaW8ua21sIn0=
 # eyJlbWFpbCI6ICJ0ZXN0QGdtYWlsLmNvbSIsICJmaWxlbmFtZSI6ICJteWZpbGUua21sIn0=
+# eyJmaWxlbmFtZSI6ICJzaWNhcl9pbW92ZWlzX21vY2suZ2VvanNvbiIsICJlbWFpbCI6ICJndWlsaGVybWVmczA5QGdtYWlsLmNvbSJ9

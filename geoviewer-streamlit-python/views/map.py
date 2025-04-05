@@ -4,7 +4,7 @@ from services.postgis import PostGISConnection, PostGISHandler
 import os
 from styles.custom import load_all
 
-load_all(title="Map View")
+load_all(title="Map Viewer")
 
 if "current_map" not in st.session_state:
     st.session_state.current_map = ""
@@ -63,6 +63,6 @@ else:
             )
             m.add_basemap()
             m.add_gdf(gdf)
-            m.to_streamlit(height=400, width=600)
+            m.to_streamlit(height=480, width=400)
         else:
             st.success("Choose a terrain on the side bar.")
