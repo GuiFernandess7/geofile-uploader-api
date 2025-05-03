@@ -2,6 +2,7 @@ package routes
 
 import (
 	"kmlSender/internal/handlers"
+	"kmlSender/internal/helpers"
 	"kmlSender/internal/models"
 	customMiddleware "kmlSender/internal/services"
 	"net/http"
@@ -31,6 +32,10 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
         log.Info("[BEGIN] - Request received on root endpoint - OK.")
 
         user_email := handlers.ReceiveUserEmail(c, log)
+        hashedEmail := helpers.HashEmail(user_email)
+        user_email = ""
+
+        log.Infof("Email received - %s", hashedEmail)
         file, err := handlers.ReceiveKMLFile(c, log)
         if err != nil {
             return c.JSON(http.StatusBadRequest, models.FileResponse{
@@ -73,7 +78,7 @@ func uploadKMLFile(log *logrus.Logger) echo.HandlerFunc {
         }
         log.Infof("[{%s}] - GeoJSON uploaded successfully.", file.Filename)
 
-        err = handlers.PublishToPubSub(file.Filename, user_email, log)
+        err = handlers.PublishToPubSub(file.Filename, hashedEmail, log)
         if err != nil {
             return c.JSON(http.StatusInternalServerError, models.FileResponse{
                 Status:  http.StatusInternalServerError,

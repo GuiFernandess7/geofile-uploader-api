@@ -40,7 +40,7 @@ def load_css(img, title):
         .css-1o9kxky.e1f1d6gn0 {{
             border: 2px solid #ffffff4d;
             border-radius: 4px;
-            padding: 1rem;
+            padding: 2rem;
         }}
 
         .css-18e3th9 {{
@@ -49,13 +49,13 @@ def load_css(img, title):
         }}
 
         .css-1d391kg {{
-            padding-left: 2rem;
-            padding-right: 0rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
         }}
 
         .block-container {{
             padding-left: 1rem !important;
-            padding-right: 0rem !important;
+            padding-right: 1rem !important;
         }}
 
         [data-testid="stAppViewContainer"] > .main {{

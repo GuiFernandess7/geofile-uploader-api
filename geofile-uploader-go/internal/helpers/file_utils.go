@@ -1,6 +1,8 @@
 package helpers
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -55,4 +57,11 @@ func DeleteFile(filePath string) error {
 		return fmt.Errorf("failed to delete file %s: %v", filePath, err)
 	}
 	return nil
+}
+
+func HashEmail(email string) (string){
+	h := sha1.New()
+    h.Write([]byte(email))
+    sha1_hash := hex.EncodeToString(h.Sum(nil))
+	return sha1_hash
 }

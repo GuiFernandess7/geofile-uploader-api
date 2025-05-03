@@ -119,7 +119,6 @@ def authenticate(email, password):
             id_token = response_data["idToken"]
             st.session_state["tokenid"] = id_token
             st.session_state.logged_in = True
-            st.success("Login successfull!")
             return id_token
         else:
             st.error(
